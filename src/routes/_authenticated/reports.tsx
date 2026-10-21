@@ -8,7 +8,7 @@ export const Route = createFileRoute("/_authenticated/reports")({
   component: Reports,
 });
 
-const axis = { stroke: "var(--muted-foreground)", fontSize: 11, fontFamily: "var(--font-mono)", tickLine: false, axisLine: false };
+const axis = { stroke: "var(--muted-foreground)", fill: "var(--muted-foreground)", fontSize: 12, fontFamily: "var(--font-mono)", tickLine: false, axisLine: false };
 const tip = { contentStyle: { background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontFamily: "var(--font-mono)", fontSize: 12 }, cursor: { fill: "var(--accent)" } };
 
 function Reports() {
@@ -38,7 +38,7 @@ function Reports() {
                 <XAxis dataKey="day" {...axis} interval={2} />
                 <YAxis {...axis} allowDecimals={false} width={24} />
                 <Tooltip {...tip} />
-                <Line type="monotone" dataKey="leads" stroke="var(--primary)" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="leads" stroke="var(--primary)" strokeWidth={2.5} dot={{ r: 2.5, fill: "var(--primary)" }} />
               </LineChart>
             </ResponsiveContainer>
           </div>

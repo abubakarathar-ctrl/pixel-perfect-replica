@@ -17,7 +17,7 @@ export const Route = createFileRoute("/_authenticated/leads")({
 });
 
 const sel = "h-8 rounded-md border border-border bg-card px-2 text-xs text-foreground focus-visible:outline-1";
-const tierText: Record<Tier, string> = { hot: "text-hot", warm: "text-warm", cold: "text-muted-foreground" };
+const tierText: Record<Tier, string> = { hot: "text-hot", warm: "text-warm", cold: "text-cold" };
 
 function Leads() {
   const { data: companies = [], isLoading } = useCompanies();
