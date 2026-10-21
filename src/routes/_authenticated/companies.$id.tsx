@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useActivities, useCompany, useMe, useUpdateCompany, STAGES, TIERS, cap, fmtDate, type Contact, type Stage, type Tier } from "@/lib/data";
+import { LeadBrief } from "@/components/LeadBrief";
 import { Chip, EmailChip, Empty, Initials, ScoreRing, TierChip } from "@/components/chips";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -72,6 +73,7 @@ function CompanyPage() {
         <TabsList>
           <TabsTrigger value="jobs">Jobs <span className="num ml-1 text-muted-foreground">{c.jobs.length}</span></TabsTrigger>
           <TabsTrigger value="contacts">Contacts <span className="num ml-1 text-muted-foreground">{c.contacts.length}</span></TabsTrigger>
+          <TabsTrigger value="brief">AI brief</TabsTrigger>
           <TabsTrigger value="activity">Activity <span className="num ml-1 text-muted-foreground">{acts.length}</span></TabsTrigger>
         </TabsList>
 
@@ -98,6 +100,10 @@ function CompanyPage() {
         <TabsContent value="contacts" className="mt-3 grid gap-4 md:grid-cols-2">
           <ContactGroup title="Recruiter / HR" list={recruiters} />
           <ContactGroup title="Decision makers" list={deciders} />
+        </TabsContent>
+
+        <TabsContent value="brief" className="mt-3">
+          <LeadBrief company={c} activities={acts} />
         </TabsContent>
 
         <TabsContent value="activity" className="mt-3 space-y-3">
