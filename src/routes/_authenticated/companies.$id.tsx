@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Copy, ExternalLink, Globe, Linkedin } from "lucide-react";
+import { Copy, ExternalLink, Globe, Linkedin, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { seo } from "@/lib/seo";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/companies/$id")({
   head: () => seo("Company", "Company jobs, contacts and activity."),
@@ -28,6 +29,34 @@ function CompanyPage() {
   const qc = useQueryClient();
   const [note, setNote] = useState("");
   const [type, setType] = useState<"note" | "email" | "call" | "meeting">("note");
+  const [enriching, setEnriching] = useState(false);
+
+  async function enrich() {
+    if (!c || enriching) return;
+    setEnriching(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("enrich-company", {
+        body: { company_id: c.id },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      const added = data?.added ?? 0;
+      const found = data?.found ?? 0;
+      toast.success(
+        added > 0
+          ? `Added ${added} new contact${added === 1 ? "" : "s"} from Apollo (${found} found).`
+          : `No new contacts found (${found} already recorded).`
+      );
+      qc.invalidateQueries({ queryKey: ["company", c.id] });
+      qc.invalidateQueries({ queryKey: ["companies"] });
+      qc.invalidateQueries({ queryKey: ["activities", c.id] });
+    } catch (err) {
+      toast.error((err as Error).message || "Failed to enrich company.");
+    } finally {
+      setEnriching(false);
+    }
+  }
 
   if (isLoading) return <div className="eyebrow">Loading…</div>;
   if (!c) return <Empty line="This company isn't on your desk." action={<Button asChild size="sm"><Link to="/leads">Back to leads</Link></Button>} />;
@@ -59,7 +88,19 @@ function CompanyPage() {
             {c.linkedin_url && <a href={c.linkedin_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 hover:text-foreground"><Linkedin className="size-3.5" />LinkedIn</a>}
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {me?.isAdmin && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={enrich}
+              disabled={enriching}
+              className="h-8 gap-1.5"
+            >
+              <Sparkles className={cn("size-3.5 text-primary", enriching && "animate-spin")} />
+              {enriching ? "Enriching..." : "Enrich"}
+            </Button>
+          )}
           <select aria-label="Tier" className={sel} value={c.tier} onChange={(e) => update.mutate({ ids: [c.id], patch: { tier: e.target.value as Tier } })}>
             {TIERS.map((t) => <option key={t} value={t}>{cap(t)}</option>)}
           </select>
@@ -97,9 +138,22 @@ function CompanyPage() {
           ))}
         </TabsContent>
 
-        <TabsContent value="contacts" className="mt-3 grid gap-4 md:grid-cols-2">
-          <ContactGroup title="Recruiter / HR" list={recruiters} />
-          <ContactGroup title="Decision makers" list={deciders} />
+        <TabsContent value="contacts" className="mt-3 space-y-3">
+          {me?.isAdmin && (
+            <div className="flex items-center justify-between rounded-md border border-border bg-card/60 px-4 py-2.5">
+              <div className="text-xs text-muted-foreground">
+                Pull recruiters, HR, and tech leadership for <strong className="text-foreground">{c.name}</strong> from Apollo.
+              </div>
+              <Button size="sm" variant="outline" onClick={enrich} disabled={enriching} className="h-7 gap-1.5 text-xs">
+                <Sparkles className={cn("size-3 text-primary", enriching && "animate-spin")} />
+                {enriching ? "Enriching..." : "Enrich with Apollo"}
+              </Button>
+            </div>
+          )}
+          <div className="grid gap-4 md:grid-cols-2">
+            <ContactGroup title="Recruiter / HR" list={recruiters} />
+            <ContactGroup title="Decision makers" list={deciders} />
+          </div>
         </TabsContent>
 
         <TabsContent value="brief" className="mt-3">

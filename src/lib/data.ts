@@ -94,7 +94,7 @@ export function useMe() {
       if (!user) return null;
       const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
       const role = normRole(roles?.[0]?.role);
-      return { id: user.id, email: user.email ?? "", role, isOwner: role === "owner", isManager: role !== "bd" };
+      return { id: user.id, email: user.email ?? "", role, isOwner: role === "owner", isManager: role !== "bd", isAdmin: role === "owner" };
     },
   });
 }
@@ -156,3 +156,4 @@ export function parseCSV(text: string): Record<string, string>[] {
   if (!head) return [];
   return rest.map((r) => Object.fromEntries(head.map((h, i) => [h.trim(), (r[i] ?? "").trim()])));
 }
+
