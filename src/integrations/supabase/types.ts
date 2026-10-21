@@ -274,7 +274,7 @@ export type Database = {
     }
     Enums: {
       activity_type: "note" | "email" | "call" | "meeting" | "status_change"
-      app_role: "admin" | "member"
+      app_role: "admin" | "member" | "owner" | "manager" | "bd"
       contact_type: "recruiter_hr" | "decision_maker"
       email_status: "valid" | "risky" | "invalid" | "unknown"
       employment_type: "contract" | "contract_friendly" | "full_time"
@@ -415,7 +415,7 @@ export const Constants = {
   public: {
     Enums: {
       activity_type: ["note", "email", "call", "meeting", "status_change"],
-      app_role: ["admin", "member"],
+      app_role: ["admin", "member", "owner", "manager", "bd"],
       contact_type: ["recruiter_hr", "decision_maker"],
       email_status: ["valid", "risky", "invalid", "unknown"],
       employment_type: ["contract", "contract_friendly", "full_time"],
