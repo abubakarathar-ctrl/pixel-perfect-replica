@@ -7,6 +7,7 @@ import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import logo from "@/assets/logo.png";
 
 export const Route = createFileRoute("/auth")({
   validateSearch: z.object({ redirect: z.string().optional() }),
@@ -68,8 +69,8 @@ function AuthPage() {
   return (
     <div className="relative z-10 grid min-h-screen place-items-center px-4">
       <div className="w-full max-w-sm">
-        <div className="mb-8 flex items-center gap-2">
-          <span className="size-2.5 rounded-full bg-primary shadow-[0_0_12px_var(--primary)]" />
+        <div className="mb-8 flex items-center gap-2.5">
+          <img src={logo} alt="SignalDesk logo" width={36} height={36} className="size-9" />
           <span className="font-display text-xl font-semibold">SignalDesk</span>
         </div>
         <h1 className="text-3xl font-semibold">{mode === "in" ? "Back to the desk." : "Open a seat."}</h1>

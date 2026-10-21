@@ -7,6 +7,7 @@ import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, C
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useCompanies, useMe, ROLE_LABEL } from "@/lib/data";
 import { cn } from "@/lib/utils";
+import logo from "@/assets/logo.png";
 
 const NAV = [
   { to: "/today", label: "Today", icon: Sunrise },
@@ -54,7 +55,7 @@ export function AppShell() {
       <div className="relative z-10 flex min-h-screen w-full">
         <aside className="fixed inset-x-0 bottom-0 z-30 flex justify-around border-t border-border bg-rail p-1.5 md:inset-y-0 md:left-0 md:right-auto md:w-14 md:flex-col md:justify-start md:gap-1 md:border-r md:border-t-0 md:py-3">
           <div className="mb-4 hidden justify-center md:flex">
-            <span className="size-2.5 rounded-full bg-primary shadow-[0_0_12px_var(--primary)]" />
+            <img src={logo} alt="SignalDesk logo" width={28} height={28} className="size-7" />
           </div>
           {NAV.map((n) => {
             const active = path.startsWith(n.to) || (n.to === "/companies" && path.startsWith("/companies"));
@@ -76,7 +77,7 @@ export function AppShell() {
 
         <div className="flex min-w-0 flex-1 flex-col pb-16 md:pb-0 md:pl-14">
           <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur md:px-6">
-            <span className="font-display font-semibold md:hidden">SignalDesk</span>
+            <span className="flex items-center gap-2 font-display font-semibold md:hidden"><img src={logo} alt="SignalDesk logo" width={20} height={20} className="size-5" />SignalDesk</span>
             <button onClick={() => setOpen(true)}
               className="flex h-9 w-full max-w-md items-center gap-2 rounded-md border border-border bg-card px-3 text-sm text-muted-foreground transition-colors duration-150 hover:border-foreground/20">
               <Search className="size-4" />
