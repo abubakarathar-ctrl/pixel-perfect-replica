@@ -34,7 +34,7 @@ function CompanyPage() {
   async function log() {
     if (!note.trim() || !me) return;
     const { error } = await supabase.from("activities").insert({ company_id: id, user_id: me.id, type, body: note.trim() });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     setNote("");
     qc.invalidateQueries({ queryKey: ["activities"] });
   }

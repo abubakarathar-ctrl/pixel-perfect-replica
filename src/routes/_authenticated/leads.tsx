@@ -55,17 +55,17 @@ function Leads() {
   }
 
   async function importCSV(file: File) {
-    const parsed = parseCSV(await file.text()).filter((r) => r.name);
-    if (!parsed.length) return toast.error("No rows found. The CSV needs a 'name' column.");
-    const rows = parsed.map((r) => ({
+    const parsed = parseCSV(await file.text()).filter((r) => r["name"]);
+    if (!parsed.length) { toast.error("No rows found. The CSV needs a 'name' column."); return; }
+    const rows = parsed.map((raw) => { const r = raw as Record<string, string | undefined> & { name: string; website?: string; linkedin_url?: string; size?: string; funding_stage?: string; location?: string; score?: string; tier?: string; stage?: string }; return {
       name: r.name, website: r.website || null, linkedin_url: r.linkedin_url || null, size: r.size || null,
       funding_stage: r.funding_stage || null, location: r.location || null,
       score: Math.max(0, Math.min(100, Number(r.score) || 50)),
       tier: (TIERS.includes(r.tier as Tier) ? r.tier : "cold") as Tier,
       stage: (STAGES.includes(r.stage as Stage) ? r.stage : "new") as Stage,
-    }));
+    }; });
     const { error } = await supabase.from("companies").insert(rows);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success(`Imported ${rows.length} leads`);
     qc.invalidateQueries({ queryKey: ["companies"] });
   }

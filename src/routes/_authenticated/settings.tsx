@@ -22,10 +22,10 @@ function Settings() {
   const qc = useQueryClient();
 
   async function setRole(userId: string, role: "admin" | "member") {
-    if (userId === me?.id && role === "member") return toast.error("You can't demote yourself.");
+    if (userId === me?.id && role === "member") { toast.error("You can't demote yourself."); return; }
     const { error: e1 } = await supabase.from("user_roles").delete().eq("user_id", userId);
     const { error: e2 } = await supabase.from("user_roles").insert({ user_id: userId, role });
-    if (e1 || e2) return toast.error((e1 || e2)!.message);
+    if (e1 || e2) { toast.error((e1 || e2)!.message); return; }
     toast.success("Role updated");
     qc.invalidateQueries({ queryKey: ["profiles"] });
   }
@@ -72,16 +72,16 @@ function ApiKeys() {
 
   async function save(provider: string) {
     const v = draft[provider]?.trim();
-    if (!v || v.length < 8) return toast.error("That key looks too short.");
+    if (!v || v.length < 8) { toast.error("That key looks too short."); return; }
     const { error } = await supabase.from("api_keys").upsert({ provider, secret_value: v, last4: v.slice(-4), updated_at: new Date().toISOString() });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     setDraft({ ...draft, [provider]: "" });
     toast.success(`${provider} key saved`);
     qc.invalidateQueries({ queryKey: ["api_keys"] });
   }
   async function remove(provider: string) {
     const { error } = await supabase.from("api_keys").delete().eq("provider", provider);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     qc.invalidateQueries({ queryKey: ["api_keys"] });
   }
 
