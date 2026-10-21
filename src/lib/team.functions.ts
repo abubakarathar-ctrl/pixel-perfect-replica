@@ -23,7 +23,7 @@ export const inviteTeamMember = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: created, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(data.email, {
       data: { full_name: data.fullName },
-      redirectTo: data.redirectTo,
+      ...(data.redirectTo ? { redirectTo: data.redirectTo } : {}),
     });
     if (error || !created.user) return { error: error?.message ?? "Couldn't invite that person." };
     const uid = created.user.id;
