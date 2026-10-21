@@ -8,6 +8,20 @@
       "when": 1792595220109,
       "tag": "0000_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792597342897,
+      "tag": "0001_add_team_roles",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792597364782,
+      "tag": "0002_team_role_permissions",
+      "breakpoints": true
     }
   ]
 }

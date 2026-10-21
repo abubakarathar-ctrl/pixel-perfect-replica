@@ -16,6 +16,14 @@ export const TIERS: Tier[] = ["hot", "warm", "cold"];
 export const ROLE_FAMILIES = ["DevOps", "SRE", "Cloud", "Data", "ML", "Security"];
 export const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
+export type TeamRole = "owner" | "manager" | "bd";
+export const ROLE_LABEL: Record<TeamRole, string> = { owner: "Owner", manager: "Manager", bd: "BD rep" };
+export function normRole(r?: string | null): TeamRole {
+  if (r === "owner" || r === "admin") return "owner";
+  if (r === "manager") return "manager";
+  return "bd";
+}
+
 export type CompanyFull = Company & { jobs: Job[]; contacts: Contact[] };
 
 export function useCompanies() {
@@ -71,7 +79,7 @@ export function useProfiles() {
       if (error) throw error;
       return (p ?? []).map((x) => ({
         ...x,
-        role: r?.find((y) => y.user_id === x.id && y.role === "admin") ? "admin" : "member",
+        role: normRole(r?.find((y) => y.user_id === x.id)?.role),
       }));
     },
   });
@@ -85,7 +93,8 @@ export function useMe() {
       const user = data.user;
       if (!user) return null;
       const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
-      return { id: user.id, email: user.email ?? "", isAdmin: !!roles?.some((r) => r.role === "admin") };
+      const role = normRole(roles?.[0]?.role);
+      return { id: user.id, email: user.email ?? "", role, isOwner: role === "owner", isManager: role !== "bd" };
     },
   });
 }

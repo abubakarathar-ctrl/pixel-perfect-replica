@@ -1,12 +1,15 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
-import { useMe, useProfiles } from "@/lib/data";
+import { useCompanies, useMe, useProfiles, ROLE_LABEL, type TeamRole } from "@/lib/data";
+import { inviteTeamMember } from "@/lib/team.functions";
 import { Chip, Empty, Initials } from "@/components/chips";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { seo } from "@/lib/seo";
 
 export const Route = createFileRoute("/_authenticated/settings")({
@@ -19,10 +22,14 @@ const PROVIDERS = ["Apollo", "Hunter", "ZeroBounce", "HubSpot", "Gmail"];
 function Settings() {
   const { data: me } = useMe();
   const { data: people = [] } = useProfiles();
+  const { data: companies = [] } = useCompanies();
   const qc = useQueryClient();
+  const invite = useServerFn(inviteTeamMember);
+  const [form, setForm] = useState<{ fullName: string; email: string; role: TeamRole }>({ fullName: "", email: "", role: "bd" });
+  const [busy, setBusy] = useState(false);
 
-  async function setRole(userId: string, role: "admin" | "member") {
-    if (userId === me?.id && role === "member") { toast.error("You can't demote yourself."); return; }
+  async function setRole(userId: string, role: TeamRole) {
+    if (userId === me?.id && role !== "owner") { toast.error("You can't change your own owner role."); return; }
     const { error: e1 } = await supabase.from("user_roles").delete().eq("user_id", userId);
     const { error: e2 } = await supabase.from("user_roles").insert({ user_id: userId, role });
     if (e1 || e2) { toast.error((e1 || e2)!.message); return; }
@@ -30,29 +37,67 @@ function Settings() {
     qc.invalidateQueries({ queryKey: ["profiles"] });
   }
 
+  async function add(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    try {
+      const r = await invite({ data: { ...form, redirectTo: window.location.origin } });
+      if ("error" in r) { toast.error(r.error); return; }
+      toast.success(`Invite sent to ${form.email}`);
+      setForm({ fullName: "", email: "", role: "bd" });
+      qc.invalidateQueries({ queryKey: ["profiles"] });
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally { setBusy(false); }
+  }
+
+  const roleOptions: TeamRole[] = me?.isOwner ? ["owner", "manager", "bd"] : ["bd"];
+  const sel = "h-9 rounded-md border border-border bg-card px-2 text-sm";
+
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div><div className="eyebrow">Workspace</div><h1 className="mt-1 text-3xl font-semibold">Settings</h1></div>
 
+      {me?.isManager && (
+        <section className="panel">
+          <div className="border-b border-border px-4 py-3"><h2 className="font-semibold">Add team member</h2>
+            <p className="text-xs text-muted-foreground">They get an email invite to set a password. Owners manage everything, managers see and assign all leads, BD reps see their own and unassigned leads.</p></div>
+          <form onSubmit={add} className="grid gap-3 p-4 sm:grid-cols-[1fr_1fr_auto_auto]">
+            <div className="space-y-1"><Label htmlFor="tm-name">Full name</Label>
+              <Input id="tm-name" required value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} /></div>
+            <div className="space-y-1"><Label htmlFor="tm-email">Email</Label>
+              <Input id="tm-email" type="email" required className="num" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
+            <div className="space-y-1"><Label htmlFor="tm-role">Role</Label>
+              <select id="tm-role" className={sel} value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value as TeamRole })}>
+                {roleOptions.map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}
+              </select></div>
+            <Button type="submit" className="self-end" disabled={busy}>{busy ? "Sending…" : "Send invite"}</Button>
+          </form>
+        </section>
+      )}
+
       <section className="panel">
-        <div className="border-b border-border px-4 py-3"><h2 className="font-semibold">Team members</h2>
-          <p className="text-xs text-muted-foreground">New sign-ups join as members. The first account is the admin.</p></div>
-        {people.map((p) => (
-          <div key={p.id} className="row-hover flex items-center gap-3 border-b border-border px-4 py-3 last:border-0">
-            <Initials name={p.full_name ?? p.email ?? "?"} />
-            <div className="flex-1"><div className="font-medium">{p.full_name}</div><div className="num text-xs text-muted-foreground">{p.email}</div></div>
-            {me?.isAdmin ? (
-              <select aria-label="Role" value={p.role} onChange={(e) => setRole(p.id, e.target.value as "admin" | "member")}
-                className="h-8 rounded-md border border-border bg-card px-2 text-xs">
-                <option value="admin">Admin</option><option value="member">Member</option>
-              </select>
-            ) : <Chip tone={p.role === "admin" ? "hot" : "neutral"}>{p.role}</Chip>}
-          </div>
-        ))}
+        <div className="border-b border-border px-4 py-3"><h2 className="font-semibold">Team members <span className="num text-sm text-muted-foreground">{people.length}</span></h2>
+          <p className="text-xs text-muted-foreground">Assign leads to people from the Owner column on the Leads page.</p></div>
+        {people.map((p) => {
+          const owned = companies.filter((c) => c.owner_id === p.id).length;
+          return (
+            <div key={p.id} className="row-hover flex flex-wrap items-center gap-3 border-b border-border px-4 py-3 last:border-0">
+              <Initials name={p.full_name ?? p.email ?? "?"} />
+              <div className="min-w-0 flex-1"><div className="font-medium">{p.full_name}{p.id === me?.id && <span className="text-muted-foreground"> (you)</span>}</div><div className="num truncate text-xs text-muted-foreground">{p.email}</div></div>
+              <Link to="/leads" className="num text-xs text-muted-foreground hover:text-foreground">{owned} leads</Link>
+              {me?.isOwner ? (
+                <select aria-label={`Role for ${p.full_name}`} value={p.role} onChange={(e) => setRole(p.id, e.target.value as TeamRole)} className="h-8 rounded-md border border-border bg-card px-2 text-xs">
+                  {(["owner", "manager", "bd"] as TeamRole[]).map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}
+                </select>
+              ) : <Chip tone={p.role === "owner" ? "hot" : p.role === "manager" ? "warm" : "neutral"}>{ROLE_LABEL[p.role]}</Chip>}
+            </div>
+          );
+        })}
       </section>
 
-      {me?.isAdmin ? <ApiKeys /> : (
-        <section className="panel"><Empty line="API keys are managed by admins." /></section>
+      {me?.isOwner ? <ApiKeys /> : (
+        <section className="panel"><Empty line="API keys are managed by the owner." /></section>
       )}
     </div>
   );

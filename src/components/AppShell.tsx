@@ -5,7 +5,7 @@ import { Building2, Columns3, LineChart, LogOut, Moon, Search, Settings, Sun, Su
 import { supabase } from "@/integrations/supabase/client";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { useCompanies, useMe } from "@/lib/data";
+import { useCompanies, useMe, ROLE_LABEL } from "@/lib/data";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -85,7 +85,7 @@ export function AppShell() {
             </button>
             <div className="ml-auto flex items-center gap-1">
               <span className="num hidden text-xs text-muted-foreground lg:inline">{me?.email}</span>
-              {me?.isAdmin && <span className="eyebrow hidden rounded border border-border px-1.5 py-0.5 lg:inline">admin</span>}
+              {me && <span className="eyebrow hidden rounded border border-border px-1.5 py-0.5 lg:inline">{ROLE_LABEL[me.role]}</span>}
               <button onClick={toggleTheme} aria-label="Toggle theme" className="grid size-9 place-items-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground">
                 {dark ? <Sun className="size-4" /> : <Moon className="size-4" />}
               </button>
