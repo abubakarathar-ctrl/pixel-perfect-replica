@@ -81,7 +81,7 @@ export function AppShell() {
               className="flex h-9 w-full max-w-md items-center gap-2 rounded-md border border-border bg-card px-3 text-sm text-muted-foreground transition-colors duration-150 hover:border-foreground/20">
               <Search className="size-4" />
               <span className="flex-1 text-left">Search companies, contacts…</span>
-              <kbd className="num hidden rounded border border-border px-1.5 text-[10px] sm:inline">⌘K</kbd>
+              <kbd className="num hidden rounded border border-border px-1.5 text-[11px] sm:inline">⌘K</kbd>
             </button>
             <div className="ml-auto flex items-center gap-1">
               <span className="num hidden text-xs text-muted-foreground lg:inline">{me?.email}</span>

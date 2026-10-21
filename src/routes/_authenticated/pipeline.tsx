@@ -45,7 +45,7 @@ function Pipeline() {
               <div className="panel flex items-center gap-2 px-3 py-2">
                 <span className={cn("size-2 rounded-full", stageDot[s])} />
                 <span className="text-sm font-medium">{cap(s)}</span>
-                <span className="num ml-auto rounded border border-border px-1.5 text-[11px] text-muted-foreground">{list.length} leads</span>
+                <span className="num ml-auto rounded border border-border px-1.5 text-xs text-muted-foreground">{list.length} leads</span>
               </div>
               {list.length === 0 && <div className="rounded-[var(--radius)] border border-dashed border-border p-6 text-center text-xs text-muted-foreground">Drop a lead here</div>}
               {list.map((c) => {
@@ -59,7 +59,7 @@ function Pipeline() {
                       <ScoreRing score={c.score} size={36} />
                       <div className="min-w-0 flex-1">
                         <Link to="/companies/$id" params={{ id: c.id }} className="block truncate font-medium hover:text-primary">{c.name}</Link>
-                        <div className="num text-[11px] text-muted-foreground">{fmtDate(c.created_at)}</div>
+                        <div className="num text-xs text-muted-foreground">{fmtDate(c.created_at)}</div>
                       </div>
                       {/* keyboard alternative to dragging */}
                       <select aria-label={`Move ${c.name}`} value={c.stage} onChange={(e) => move(c.id, e.target.value as Stage)}
@@ -76,7 +76,7 @@ function Pipeline() {
                     <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
                       <TierChip tier={c.tier} />
                       {c.jobs.some((j) => j.employment_type === "contract") && <Chip>Contract</Chip>}
-                      <span className="ml-auto text-[11px] text-muted-foreground">{people.find((p) => p.id === c.owner_id)?.full_name ?? "Unassigned"}</span>
+                      <span className="ml-auto text-xs text-muted-foreground">{people.find((p) => p.id === c.owner_id)?.full_name ?? "Unassigned"}</span>
                     </div>
                   </div>
                 );

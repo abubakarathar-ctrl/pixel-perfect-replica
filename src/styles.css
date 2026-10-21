@@ -151,7 +151,7 @@
 }
 @utility eyebrow {
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   font-weight: 500;
