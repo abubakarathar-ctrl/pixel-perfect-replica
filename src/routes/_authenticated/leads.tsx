@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
-import { Download, Upload } from "lucide-react";
+import { Download, RefreshCw, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useCompanies, useProfiles, useUpdateCompany, STAGES, TIERS, ROLE_FAMILIES, cap, daysAgo, fmtDate, toCSV, parseCSV, type Tier, type Stage } from "@/lib/data";
+import { fetchAndIngestRemoteJobs } from "@/lib/remote-jobs";
 import { Chip, Empty } from "@/components/chips";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -27,6 +28,24 @@ function Leads() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [f, setF] = useState({ contract: false, remote: false, family: "", found: "", tier: "", stage: "", owner: "" });
   const [picked, setPicked] = useState<string[]>([]);
+  const [fetchingJobs, setFetchingJobs] = useState(false);
+
+  async function handleFetchRemoteJobs() {
+    setFetchingJobs(true);
+    try {
+      const res = await fetchAndIngestRemoteJobs();
+      if (res.addedJobs > 0) {
+        toast.success(res.message);
+      } else {
+        toast.info("All latest remote jobs are already synced.");
+      }
+      qc.invalidateQueries({ queryKey: ["companies"] });
+    } catch (err) {
+      toast.error((err as Error).message || "Failed to fetch remote jobs.");
+    } finally {
+      setFetchingJobs(false);
+    }
+  }
 
   const rows = useMemo(() => companies.filter((c) => {
     if (f.contract && !c.jobs.some((j) => j.employment_type !== "full_time")) return false;
@@ -76,7 +95,17 @@ function Leads() {
     <div className="mx-auto max-w-7xl space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div><div className="eyebrow">Database</div><h1 className="mt-1 text-3xl font-semibold">Leads <span className="num text-lg text-muted-foreground">{rows.length}</span></h1></div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleFetchRemoteJobs}
+            disabled={fetchingJobs}
+            className="gap-1.5"
+          >
+            <RefreshCw className={cn("size-3.5 text-primary", fetchingJobs && "animate-spin")} />
+            {fetchingJobs ? "Syncing Jobs..." : "Fetch Daily Remote Jobs"}
+          </Button>
           <input ref={fileRef} type="file" accept=".csv" className="hidden" onChange={(e) => { const x = e.target.files?.[0]; if (x) importCSV(x); e.target.value = ""; }} />
           <Button variant="outline" size="sm" onClick={() => fileRef.current?.click()}><Upload /> Import CSV</Button>
           <Button size="sm" onClick={exportCSV}><Download /> Export</Button>

@@ -1,9 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowUpRight } from "lucide-react";
+import { useState } from "react";
+import { ArrowUpRight, RefreshCw } from "lucide-react";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 import { useActivities, useCompanies, useMe, isToday, daysAgo, cap } from "@/lib/data";
+import { fetchAndIngestRemoteJobs } from "@/lib/remote-jobs";
 import { Chip, Empty, ScoreRing, TierChip } from "@/components/chips";
 import { Button } from "@/components/ui/button";
 import { seo } from "@/lib/seo";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/today")({
   head: () => seo("Today", "New leads, contract roles, verified emails and follow-ups due today."),
@@ -14,6 +19,26 @@ function Today() {
   const { data: companies = [], isLoading } = useCompanies();
   const { data: acts = [] } = useActivities();
   const { data: me } = useMe();
+  const qc = useQueryClient();
+  const [fetchingJobs, setFetchingJobs] = useState(false);
+
+  async function handleFetchRemoteJobs() {
+    setFetchingJobs(true);
+    try {
+      const res = await fetchAndIngestRemoteJobs();
+      if (res.addedJobs > 0) {
+        toast.success(res.message);
+      } else {
+        toast.info("All latest remote jobs are already synced.");
+      }
+      qc.invalidateQueries({ queryKey: ["companies"] });
+    } catch (err) {
+      toast.error((err as Error).message || "Failed to fetch remote jobs.");
+    } finally {
+      setFetchingJobs(false);
+    }
+  }
+
   const jobs = companies.flatMap((c) => c.jobs);
   const contacts = companies.flatMap((c) => c.contacts);
   const kpis = [
@@ -27,9 +52,21 @@ function Today() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
-      <div>
-        <div className="eyebrow">{new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}</div>
-        <h1 className="mt-1 text-3xl font-semibold">Today on the desk</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <div className="eyebrow">{new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}</div>
+          <h1 className="mt-1 text-3xl font-semibold">Today on the desk</h1>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleFetchRemoteJobs}
+          disabled={fetchingJobs}
+          className="gap-1.5"
+        >
+          <RefreshCw className={cn("size-3.5 text-primary", fetchingJobs && "animate-spin")} />
+          {fetchingJobs ? "Syncing Remote Jobs..." : "Sync Daily Remote Jobs"}
+        </Button>
       </div>
 
       <div className="grid grid-cols-2 gap-px overflow-hidden rounded-[var(--radius)] border border-border bg-border lg:grid-cols-4">
@@ -58,7 +95,7 @@ function Today() {
                       <div className="truncate text-xs text-muted-foreground">{c.jobs.map((j) => j.title).join(" · ")}</div>
                     </div>
                     <div className="hidden gap-1.5 sm:flex">
-                      {c.jobs.some((j) => j.employment_type === "contract") && <Chip>Contract</Chip>}
+                      {c.jobs.some((j) => j.employment_type === "contract") && <Chip tone="hot">Contract</Chip>}
                       {c.jobs.some((j) => j.remote_us) && <Chip>Remote US</Chip>}
                     </div>
                     <ArrowUpRight className="size-4 text-muted-foreground" />
