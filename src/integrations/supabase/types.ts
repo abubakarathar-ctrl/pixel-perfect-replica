@@ -271,6 +271,8 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_manager: { Args: { _uid: string }; Returns: boolean }
+      is_owner: { Args: { _uid: string }; Returns: boolean }
     }
     Enums: {
       activity_type: "note" | "email" | "call" | "meeting" | "status_change"
