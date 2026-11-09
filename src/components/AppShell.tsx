@@ -1,7 +1,7 @@
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { Building2, Columns3, LineChart, LogOut, Moon, Search, Settings, Sun, Sunrise, Table2, Users } from "lucide-react";
+import { Building2, Columns3, FileSpreadsheet, LineChart, LogOut, Moon, Search, Settings, Sun, Sunrise, Table2, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -15,6 +15,7 @@ const NAV = [
   { to: "/pipeline", label: "Pipeline", icon: Columns3 },
   { to: "/companies", label: "Companies", icon: Building2 },
   { to: "/contacts", label: "Contacts", icon: Users },
+  { to: "/ba", label: "BA Dashboard", icon: FileSpreadsheet },
   { to: "/reports", label: "Reports", icon: LineChart },
   { to: "/settings", label: "Settings", icon: Settings },
 ] as const;
